@@ -56,6 +56,14 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	for k, v := range attrs {
+		if r.Message == "raw" {
+			if !map[string]bool{
+				"source": true,
+			}[k] {
+				v = fmt.Sprintf("%#v", v)
+			}
+		}
+
 		r.Add(slog.Any(k, v))
 	}
 
@@ -67,9 +75,9 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	})
 
 	if h.pretty {
-		if r.Message == "raw" {
+		if r.Message == "raw" && h.format != "json" {
 			for k, v := range fields {
-				out = append(out, []byte(fmt.Sprintf("\n\t%s: %#v", k, v))...)
+				out = append(out, []byte(fmt.Sprintf("\n\t%s: %s", k, v))...)
 			}
 		} else {
 			if b, err := json.MarshalIndent(fields, "", "  "); err != nil {
@@ -111,6 +119,13 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 
 func NewHandler(out io.Writer, opts *Options) Handler {
 	b := new(bytes.Buffer)
+
+	if !map[string]bool{
+		"json": true,
+		"text": true,
+	}[opts.Format] {
+		opts.Format = "json"
+	}
 
 	return Handler{
 		Handler: slog.NewJSONHandler(b, opts.HandlerOptions),
