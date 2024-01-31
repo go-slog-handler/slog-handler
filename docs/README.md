@@ -14,13 +14,13 @@ func main() {
 	slog.Info("test", "example 1", map[int]string{
 		0: "test",
 	})
-	slog.Info("raw", "example 2", map[int]string{
+	slog.Info("example of raw output", "raw;example 2", map[int]string{
 		0: "test",
 	})
-	slog.Error("raw", "example 2", map[int]string{
+	slog.Error("example of raw output", "raw;example 3", map[int]string{
 		0: "test",
 	})
-	slog.Warn("test 2", "example 2", map[int]string{
+	slog.Warn("test 2", "example 4", map[int]string{
 		0: "test",
 	})
 }

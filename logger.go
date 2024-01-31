@@ -34,6 +34,8 @@ func SetLogger(opts Options) {
 				return slog.Attr{}
 			}
 
+			key := strings.Split(a.Key, ";")
+
 			if a.Key == slog.SourceKey {
 				s := a.Value.Any().(*slog.Source)
 
@@ -43,6 +45,9 @@ func SetLogger(opts Options) {
 					filepath.Join(filepath.Base(dir), file),
 					s.Line,
 				))
+			} else if key[0] == "raw" {
+				a.Key = strings.Join(key[1:], ";")
+				a.Value = slog.StringValue(fmt.Sprintf("%#v", a.Value.Any()))
 			}
 
 			return a

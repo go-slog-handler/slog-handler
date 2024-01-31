@@ -32,12 +32,15 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 		h.m.Unlock()
 	}()
 
-	var out []byte
+	var (
+		fields = make(map[string]interface{}, r.NumAttrs())
+		out    []byte
+	)
 
 	if h.format == "json" {
-		r.Add(slog.String("level", strings.ToLower(r.Level.String())))
-		r.Add(slog.String("msg", r.Message))
-		r.Add(slog.String("time", r.Time.Format(time.DateTime)))
+		fields["level"] = strings.ToLower(r.Level.String())
+		fields["msg"] = r.Message
+		fields["time"] = r.Time.Format(time.DateTime)
 	} else {
 		out = []byte(fmt.Sprintf("%s %s %s ",
 			r.Time.Format(time.DateTime),
@@ -56,35 +59,14 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	for k, v := range attrs {
-		if r.Message == "raw" {
-			if !map[string]bool{
-				"source": true,
-			}[k] {
-				v = fmt.Sprintf("%#v", v)
-			}
-		}
-
-		r.Add(slog.Any(k, v))
+		fields[k] = v
 	}
 
-	fields := make(map[string]interface{}, r.NumAttrs())
-	r.Attrs(func(a slog.Attr) bool {
-		fields[a.Key] = a.Value.Any()
-
-		return true
-	})
-
 	if h.pretty {
-		if r.Message == "raw" && h.format != "json" {
-			for k, v := range fields {
-				out = append(out, []byte(fmt.Sprintf("\n\t%s: %s", k, v))...)
-			}
+		if b, err := json.MarshalIndent(fields, "", "  "); err != nil {
+			return err
 		} else {
-			if b, err := json.MarshalIndent(fields, "", "  "); err != nil {
-				return err
-			} else {
-				out = append(out, b...)
-			}
+			out = append(out, b...)
 		}
 	} else {
 		if b, err := json.Marshal(fields); err != nil {
