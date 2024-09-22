@@ -20,7 +20,7 @@ type Options struct {
 	Pretty    bool
 }
 
-func SetLogger(opts Options) {
+func NewLogger(opts Options) *slog.Logger {
 	opts.HandlerOptions = &slog.HandlerOptions{
 		AddSource: opts.AddSource,
 		Level:     ParseLevel(opts.Level),
@@ -56,7 +56,11 @@ func SetLogger(opts Options) {
 
 	handler := NewHandler(os.Stdout, &opts)
 
-	logger := slog.New(handler.WithAttrs(opts.Attr))
+	return slog.New(handler.WithAttrs(opts.Attr))
+}
+
+func SetGlobalLogger(opts Options) {
+	logger := NewLogger(opts)
 
 	slog.SetDefault(logger)
 }
