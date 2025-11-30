@@ -39,3 +39,44 @@ func init() {
 
 Output:
 ![handler output](output.png?raw=true)
+
+## NullHandler
+
+The `NullHandler` is a special handler that discards all log records. It's useful for:
+- Testing where you don't want log output
+- Disabling logging in production without code changes
+- Benchmarking code without logging overhead
+
+### Usage
+
+```go
+package main
+
+import (
+	"log/slog"
+
+	logger "gopkg.in/slog-handler.v1"
+)
+
+func main() {
+	// Create logger with NullHandler
+	log := logger.NewLogger(logger.Options{
+		Null: true, // Enable NullHandler
+	})
+
+	// These logs will be discarded
+	log.Info("this will not be logged")
+	log.Error("this will also be discarded")
+	log.With("key", "value").Debug("nothing here")
+}
+```
+
+You can also set it as the global logger:
+
+```go
+func init() {
+	logger.SetGlobalLogger(logger.Options{
+		Null: true, // All slog calls will be discarded
+	})
+}
+```
